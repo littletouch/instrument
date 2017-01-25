@@ -1,0 +1,30 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Unit test / coverage reports
+/.cache/
+
+# Editor
+*.sw[op]
+
+# C extensions
+*.so
+
+# Distribution / packaging
+var/
+*.egg-info/
+*.egg
+
+# virtualenv
+/venv/
+
+#dae
+/permdir/
+/permdir_test/
+/offline_permdir/
+/offline_permdir_test/
+
+/test.yaml
+/dev.yaml
