@@ -1,5 +1,3 @@
-import 'whatwg-fetch'
-
 const WIKIDATA_QUERY_ENDPOINT = "https://query.wikidata.org/sparql"
 const ALL_ITEMS_QUERY = "SELECT ?id WHERE {?id wdt:P279+ wd:Q34379 .}"
 
