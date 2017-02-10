@@ -18,7 +18,7 @@ export function getAllItemIds() {
 }
 
 function getWikiDataItemById(id) {
-  let url = `http://www.wikidata.org/wiki/Special:EntityData/${id}.json`
+  let url = `https://www.wikidata.org/wiki/Special:EntityData/${id}.json`
 
   return fetch(url).then(function(response) {
     return response.json()
