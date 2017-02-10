@@ -1,25 +1,25 @@
+import axios from 'axios'
+
 const WIKIDATA_QUERY_ENDPOINT = "https://query.wikidata.org/sparql"
 const WIKIDATA_API_ENDPOINT = 'https://www.wikidata.org/w/api.php'
 const ALL_ITEMS_QUERY = "SELECT ?id WHERE {?id wdt:P279+ wd:Q34379 .}"
 
 
 export function getAllItemIds() {
-  let url = new URL(WIKIDATA_QUERY_ENDPOINT),
+  let url = WIKIDATA_QUERY_ENDPOINT,
       params = {query: ALL_ITEMS_QUERY, format: 'json'}
 
-  Object.keys(params).forEach(key => url.searchParams.append(key, params[key]))
-
-  return fetch(url).then(function(response) {
-    return response.json()
-  }).then(function(data){
-    let items = data.results.bindings
+  return axios.get(url, {
+    params: params,
+  }).then(function(response){
+    let items = response.data.results.bindings
     let itemIds = items.map( item => item['id']['value'].split('/').pop())
     return itemIds
   })
 }
 
 function getWikiDataItemById(id) {
-  let url = new URL(WIKIDATA_API_ENDPOINT),
+  let url = WIKIDATA_API_ENDPOINT,
       params = {
         action: 'wbgetentities',
         ids: id,
@@ -27,20 +27,17 @@ function getWikiDataItemById(id) {
         format: 'json',
         props: 'sitelinks/urls',
       }
-  Object.keys(params).forEach(key => url.searchParams.append(key, params[key]))
 
-  return fetch(
+  return axios.get(
     url,
     {
+      params: params,
       headers: {
-        "User-Agent":  "Firefox",
         "Accept": "application/json"
       }
     }
-  ).then(function(response) {
-    return response.json()
-  }).then(function(data){
-    return data.entities[id]
+  ).then(function(response){
+    return response.data.entities[id]
   })
 }
 
