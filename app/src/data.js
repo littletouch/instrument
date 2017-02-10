@@ -1,4 +1,5 @@
 const WIKIDATA_QUERY_ENDPOINT = "https://query.wikidata.org/sparql"
+const WIKIDATA_API_ENDPOINT = 'https://www.wikidata.org/w/api.php'
 const ALL_ITEMS_QUERY = "SELECT ?id WHERE {?id wdt:P279+ wd:Q34379 .}"
 
 
@@ -18,9 +19,25 @@ export function getAllItemIds() {
 }
 
 function getWikiDataItemById(id) {
-  let url = `https://www.wikidata.org/wiki/Special:EntityData/${id}.json`
+  let url = new URL(WIKIDATA_API_ENDPOINT),
+      params = {
+        action: 'wbgetentities',
+        ids: id,
+        origin: '*',
+        format: 'json',
+        props: 'sitelinks/urls',
+      }
+  Object.keys(params).forEach(key => url.searchParams.append(key, params[key]))
 
-  return fetch(url).then(function(response) {
+  return fetch(
+    url,
+    {
+      headers: {
+        "User-Agent":  "Firefox",
+        "Accept": "application/json"
+      }
+    }
+  ).then(function(response) {
     return response.json()
   }).then(function(data){
     return data.entities[id]
