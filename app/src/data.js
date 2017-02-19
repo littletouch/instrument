@@ -1,4 +1,7 @@
 import axios from 'axios'
+import {map, includes, filter, sample} from 'lodash'
+
+import firebase from 'firebase'
 
 const WIKIDATA_QUERY_ENDPOINT = "https://query.wikidata.org/sparql"
 const WIKIDATA_API_ENDPOINT = 'https://www.wikidata.org/w/api.php'
@@ -43,7 +46,37 @@ function getWikiDataItemById(id) {
 
 
 export function getContentByIdAndLang(id, lang) {
+  let wikiName = `${lang}wiki`
+
   return getWikiDataItemById(id).then(function(data){
-    return data.sitelinks[`${lang}wiki`]
+    let sitelinks = data.sitelinks
+    let item
+    if (includes(sitelinks, wikiName)) {
+      item = sitelinks[wikiName]
+      item['id'] = id
+      return item
+    } else {
+      //  TODO: random get one wiki for now
+      //  Could use language of the instrument's origin country
+      item = sitelinks[Object.keys(sitelinks)[0]]
+      item['id'] = id
+      return item
+    }
+  })
+}
+
+export function getUserHistoryRefByUid(uid) {
+  let database = firebase.database()
+  return database.ref('users_history/' + uid)
+}
+
+export function getNewItemByHistory(history) {
+  // history item schema {id, time}
+  return getAllItemIds().then( allItemIds => {
+    let readIds = map(history, (_) => _.id)
+    let unreadItems = filter(allItemIds, (itemId) => !includes(readIds, itemId))
+    console.log('unread, ', unreadItems.length)
+    let itemId = sample(unreadItems)
+    return getContentByIdAndLang(itemId, 'en')
   })
 }

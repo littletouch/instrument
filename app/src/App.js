@@ -1,10 +1,11 @@
 import React, { Component } from 'react';
 import './App.css';
-import {sample} from 'lodash'
 
 import firebase from 'firebase'
 
-import {getAllItemIds, getContentByIdAndLang} from './data'
+import {
+    getUserHistoryRefByUid, getAllItemIds,
+    getContentByIdAndLang, getNewItemByHistory} from './data'
 
 class App extends Component {
 
@@ -31,40 +32,37 @@ class App extends Component {
     firebase.initializeApp(config);
     firebase.auth().onAuthStateChanged( (user) => {
       if (user) {
-        console.log('logged in', user)
+        let ref = getUserHistoryRefByUid(user.uid)
         this.setState({user: user})
-      }
-    })
 
-    getAllItemIds().then( ids => {
-      let itemId = sample(ids)
-      this.setState({allItemIds: ids})
+        ref.once('value').then( (response) => {
+          let history = response.val().history || []
+          console.log('readed history', history)
 
-      getContentByIdAndLang(itemId, 'en').then( item => {
-        this.setState({
-          link: item.url,
-          name: item.title
+          getNewItemByHistory(history).then(item => {
+            let newItem = {
+              id: item.id,
+              time: (new Date()).toString()
+            }
+            this.setState({
+              link: item.url,
+              name: item.title
+            })
+            history.push(newItem)
+            ref.set({'history': history})
+          })
         })
-      })
+      }
+
 
     })
+
   }
 
   handleLogin() {
     let provider = new firebase.auth.GoogleAuthProvider();
     firebase.auth().signInWithPopup(provider).then(function(result) {
-      console.log('login result', result)
-      var token = result.credential.accessToken;
-      var user = result.user;
     }).catch(function(error) {
-      // Handle Errors here.
-      var errorCode = error.code;
-      var errorMessage = error.message;
-      // The email of the user's account used.
-      var email = error.email;
-      // The firebase.auth.AuthCredential type that was used.
-      var credential = error.credential;
-      // ...
     });
   }
 
@@ -80,9 +78,7 @@ class App extends Component {
 
     return (
       <div className="App">
-        <h2>Welcome to Instrument</h2>
         {loginInfo}
-        <h3> The world has {this.state.allItemIds.length} musicial instruments. </h3>
         <p>And here comes <a href={this.state.link}>{this.state.name}</a>.</p>
       </div>
     );
