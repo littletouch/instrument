@@ -4,6 +4,7 @@ import AV from 'leancloud-storage'
 import './App.css'
 
 import { getUserHistory, getNewItemByHistory } from './data'
+
 class SignUp extends PureComponent {
   constructor(props) {
     super(props)
@@ -152,6 +153,17 @@ class LoginOrSignUp extends PureComponent {
   }
 }
 
+class Instrument extends PureComponent {
+  render () {
+    const {name, wikilink} = this.props
+    return (<div>
+      <h2>Instrument for today: {name}</h2>
+      <iframe title={name} src={wikilink} width="100%" height="700px" />
+    </div>)
+  }
+}
+
+
 class InstrumentToday extends PureComponent {
   constructor (props) {
     super(props)
@@ -174,7 +186,8 @@ class InstrumentToday extends PureComponent {
       await currentUser.save()
       this.setState({
         link: instrument.url,
-        name: instrument.title
+        name: instrument.title,
+        id: instrument.id,
       })
     } catch (error) {
       console.error(error)
@@ -182,9 +195,9 @@ class InstrumentToday extends PureComponent {
   }
 
   render () {
-    const { link, name } = this.state
+    const { link, id, name} = this.state
     return (
-      <a target="_blank" href={link}>{name}</a>
+      <Instrument wikilink={link} id={id} name={name} />
     )
   }
 }
