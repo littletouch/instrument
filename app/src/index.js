@@ -6,7 +6,4 @@ import './index.css'
 
 initStorageProvider()
 
-ReactDOM.render(
-  <App />,
-  document.getElementById('root')
-)
+ReactDOM.render(<App />, document.getElementById('root'))
