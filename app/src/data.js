@@ -48,6 +48,11 @@ export async function getWikiDataItemById (id) {
   }
 }
 
+function _wikipediaLinkToMobile(url) {
+  const parts = url.split('.')
+  parts.splice(1, 0, 'm')
+  return parts.join('.')
+}
 
 export async function getContentByIdAndLang (id, lang) {
   const wikiName = `${lang}wiki`
@@ -57,19 +62,19 @@ export async function getContentByIdAndLang (id, lang) {
     const sitelinks = data.sitelinks
     let item
     if (isEmpty(sitelinks)) {
-      item['id'] = id
-      return item
+      // FIXME: doesn't have any wikipedia links, what now?
+      // maybe we should filter in the first place
+      item = {}
     } else if (includes(sitelinks, wikiName)) {
       item = sitelinks[wikiName]
-      item['id'] = id
-      return item
     } else {
       //  TODO: random get one wiki for now
       //  Could use language of the instrument's origin country
       item = sitelinks[Object.keys(sitelinks)[0]]
-      item['id'] = id
-      return item
     }
+    item['id'] = id
+    item['url'] = _wikipediaLinkToMobile(item['url'])
+    return item
   } catch (error) {
     console.error(error)
   }
