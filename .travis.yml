@@ -1,5 +1,7 @@
 language: node_js
+node_js:
+  - 8.8
 install:
   - cd app && yarn
 script:
-  - cd app && yarn test
+  - yarn test
