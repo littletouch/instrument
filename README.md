@@ -1,5 +1,4 @@
-# Instrument
----
+# Instrument [![Build Status](https://travis-ci.org/littletouch/instrument-guide.svg?branch=master)](https://travis-ci.org/littletouch/instrument-guide)
 
 Dependencies
 ````bash
