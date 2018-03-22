@@ -2,21 +2,16 @@
 
 Dependencies
 ````bash
-npm install -g firebase-tools yarn
-cd app && yarn install && firebase login
+npm install -g yarn
+cd app && yarn install
 ````
 
 Develop
 ````bash
-cd app && npm stat
+cd app && yarn start
 ````
 
 Build
 ````bash
-cd app && npm run build
-````
-
-Deploy
-````bash
-cd app && firebase deploy
+cd app && yarn build
 ````
