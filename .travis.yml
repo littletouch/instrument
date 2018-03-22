@@ -1,0 +1,5 @@
+language: node_js
+install:
+  - cd app && yarn
+script:
+  - cd app && yarn test
