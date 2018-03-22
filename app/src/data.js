@@ -156,6 +156,5 @@ export async function refresh() {
       console.error(error)
     }
   }
-  debugger
   return instrument
 }

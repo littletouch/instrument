@@ -182,10 +182,10 @@ class LoginOrSignUp extends PureComponent {
 
 class Instrument extends PureComponent {
   render () {
-    const {name, wikilink} = this.props
+    const {title, wikiUrl} = this.props
     return (<div>
-      <h2>Instrument for today: {name}</h2>
-      <iframe title={name} src={wikilink} width="100%" height="700px" />
+      <h2>Instrument for today: {title}</h2>
+      <iframe title={title} src={wikiUrl} width="100%" height="700px" />
     </div>)
   }
 }
@@ -196,20 +196,21 @@ class InstrumentToday extends PureComponent {
     super(props)
     this.state = {
       url: undefined,
-      title: undefined
+      title: undefined,
+      id: undefined,
     }
   }
 
 
   async componentDidMount() {
-    const { url, title } = await refresh()
-    this.setState({ url, title })
+    const { url, title, id } = await refresh()
+    this.setState({ url, title, id })
   }
 
   render () {
-    const { link, id, name} = this.state
+    const { url, title, id } = this.state
     return (
-      <Instrument wikilink={link} id={id} name={name} />
+      <Instrument wikiUrl={url} id={id} title={title} />
     )
   }
 }
