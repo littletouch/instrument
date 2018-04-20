@@ -1,15 +1,28 @@
 import axios from 'axios'
-import { get, map, includes, filter, sample, isEmpty, find } from 'lodash'
+import {
+  get, map, includes, filter, sample, isEmpty, find, groupBy,
+  flatten
+} from 'lodash'
 import AV from 'leancloud-storage'
 import { startOfToday, isBefore, subHours } from 'date-fns'
 
 const WIKIDATA_QUERY_ENDPOINT = 'https://query.wikidata.org/sparql'
 const WIKIDATA_API_ENDPOINT = 'https://www.wikidata.org/w/api.php'
-const ALL_ITEMS_QUERY = 'SELECT ?id WHERE {?id wdt:P279+ wd:Q34379 .}'
+const ALL_ITEMS_QUERY = `
+  SELECT ?wd ?sitelink WHERE {
+    ?wd wdt:P279+ wd:Q34379 .
+    ?sitelink schema:about ?wd .
+  }
+`
 
 const refreshAt = 5
 
-export async function getAllItemIds() {
+// TODO: move it elsewhere, it should be reading user preference
+const getUserLangs = () => window.navigator.languages
+
+const _wpLangRe = /https?:\/\/(\w+)\.wikipedia\.org\S+/g
+
+export async function getAllItemIds(langs = ['zh']) {
   const url = WIKIDATA_QUERY_ENDPOINT
   const params = { query: ALL_ITEMS_QUERY, format: 'json' }
 
@@ -18,13 +31,32 @@ export async function getAllItemIds() {
       params: params
     })
     const items = response.data.results.bindings
-    return items.map(item =>
-      get(item, 'id.value')
-        .split('/')
-        .pop()
-    )
+
+    const wdLangPairs = items.map(item => {
+      const wdId = get(item, 'wd.value').split('/').pop();
+      const siteLink = get(item, 'sitelink.value')
+      const r = _wpLangRe.exec(siteLink)
+      const lang = r && r[1]
+      return {
+        wdId,
+        lang,
+      }
+    }).filter(item => item.lang)
+
+    const wdIdsByLang = {}
+
+    wdLangPairs.forEach(({wdId, lang}) => {
+      if (!wdIdsByLang[lang]) {
+        wdIdsByLang[lang] = []
+      }
+      wdIdsByLang[lang].push(wdId)
+    })
+
+    const wdIds = flatten(langs.map(l => wdIdsByLang[l] || []))
+    return wdIds
+
   } catch (error) {
-    console.error(error)
+    console.error('fetching all items error', error)
   }
 }
 
@@ -57,24 +89,14 @@ function _wikipediaLinkToMobile(url) {
   return parts.join('.')
 }
 
-export async function getContentByIdAndLang(id, lang) {
-  const wikiName = `${lang}wiki`
+export async function getContentByIdAndLangs(id, langs) {
 
   try {
     const data = await getWikiDataItemById(id)
     const sitelinks = data.sitelinks
-    let item
-    if (isEmpty(sitelinks)) {
-      // FIXME: doesn't have any wikipedia links, what now?
-      // maybe we should filter in the first place
-      item = {}
-    } else if (includes(sitelinks, wikiName)) {
-      item = sitelinks[wikiName]
-    } else {
-      //  TODO: random get one wiki for now
-      //  Could use language of the instrument's origin country
-      item = sitelinks[Object.keys(sitelinks)[0]]
-    }
+    const lang = langs.find(lang => sitelinks[`${lang}wiki`])
+    const wikiName = `${lang}wiki`
+    const item = sitelinks[wikiName]
     item['id'] = id
     item['url'] = _wikipediaLinkToMobile(item['url'])
     return item
@@ -118,8 +140,11 @@ export async function getNewItemByHistory(history) {
     } else {
       shouldGetNewItem = true
     }
+
+    const langs = getUserLangs()
+
     if (shouldGetNewItem) {
-      const allItemIds = await getAllItemIds()
+      const allItemIds = await getAllItemIds(langs)
       const readIds = map(history, _ => _.id)
       const unreadItems = filter(
         allItemIds,
@@ -129,7 +154,7 @@ export async function getNewItemByHistory(history) {
     } else {
       itemId = latestItem.id
     }
-    return getContentByIdAndLang(itemId, 'en')
+    return getContentByIdAndLangs(itemId, langs)
   } catch (error) {
     console.error(error)
   }
@@ -138,6 +163,7 @@ export async function getNewItemByHistory(history) {
 export async function refresh() {
   const history = await getUserHistory()
   const instrument = await getNewItemByHistory(history)
+
   if (
     !find(
       history,

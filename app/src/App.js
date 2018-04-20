@@ -4,6 +4,7 @@ import AV from 'leancloud-storage'
 import './App.css'
 
 import { refresh } from './data'
+
 class SignUp extends PureComponent {
   constructor(props) {
     super(props)
