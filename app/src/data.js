@@ -1,10 +1,11 @@
 import axios from 'axios'
 import {
-  get, map, includes, filter, sample, isEmpty, find, groupBy,
-  flatten
+  get, map, includes, filter, sample, find, flatten
 } from 'lodash'
 import AV from 'leancloud-storage'
-import { startOfToday, isBefore, subHours } from 'date-fns'
+import { startOfToday, isAfter } from 'date-fns'
+
+import parse from './parse'
 
 const WIKIDATA_QUERY_ENDPOINT = 'https://query.wikidata.org/sparql'
 const WIKIDATA_API_ENDPOINT = 'https://www.wikidata.org/w/api.php'
@@ -14,8 +15,6 @@ const ALL_ITEMS_QUERY = `
     ?sitelink schema:about ?wd .
   }
 `
-
-const refreshAt = 5
 
 // TODO: move it elsewhere, it should be reading user preference
 const getUserLangs = () => window.navigator.languages
@@ -33,7 +32,7 @@ export async function getAllItemIds(langs = ['zh']) {
     const items = response.data.results.bindings
 
     const wdLangPairs = items.map(item => {
-      const wdId = get(item, 'wd.value').split('/').pop();
+      const wdId = get(item, 'wd.value').split('/').pop()
       const siteLink = get(item, 'sitelink.value')
       const r = _wpLangRe.exec(siteLink)
       const lang = r && r[1]
@@ -115,8 +114,8 @@ export async function getUserHistory() {
   }
 }
 
-export const alreadyFetched = (time, refreshAt) => {
-  return isBefore(subHours(new Date(time), refreshAt), startOfToday())
+export const alreadyFetched = (time) => {
+  return isAfter(time, startOfToday())
 }
 
 export async function getNewItemByHistory(history) {
@@ -131,11 +130,11 @@ export async function getNewItemByHistory(history) {
     if (sortedHistoryByViewTimeDESC.length) {
       latestItem = sortedHistoryByViewTimeDESC[0]
       if (
-        alreadyFetched(latestItem.time, refreshAt)
+        alreadyFetched(latestItem.time)
       ) {
-        shouldGetNewItem = true
-      } else {
         shouldGetNewItem = false
+      } else {
+        shouldGetNewItem = true
       }
     } else {
       shouldGetNewItem = true
@@ -182,5 +181,6 @@ export async function refresh() {
       console.error(error)
     }
   }
-  return instrument
+  const parsedInstrument = await parse(instrument.title)
+  return Object.assign({}, parsedInstrument, instrument)
 }
