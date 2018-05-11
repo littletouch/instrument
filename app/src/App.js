@@ -1,5 +1,6 @@
 import React, { PureComponent } from 'react'
 import AV from 'leancloud-storage'
+import LangSetting from './LangSetting'
 
 import './App.css'
 
@@ -231,6 +232,7 @@ class App extends PureComponent {
 
     return (
       <section>
+        <LangSetting />
         <p>Hello, {currentUser.getUsername()}</p>
         <InstrumentToday />
       </section>
