@@ -96,6 +96,7 @@ export async function getContentByIdAndLangs(id, langs) {
     const lang = langs.find(lang => sitelinks[`${lang}wiki`])
     const wikiName = `${lang}wiki`
     const item = sitelinks[wikiName]
+    item['lang'] = lang
     item['id'] = id
     item['url'] = _wikipediaLinkToMobile(item['url'])
     return item
@@ -181,6 +182,6 @@ export async function refresh() {
       console.error(error)
     }
   }
-  const parsedInstrument = await parse(instrument.title)
+  const parsedInstrument = await parse(instrument.title, instrument.lang)
   return Object.assign({}, parsedInstrument, instrument)
 }
